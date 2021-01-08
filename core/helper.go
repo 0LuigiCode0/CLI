@@ -33,3 +33,25 @@ func reset() {
 	cmd(true, "clear")
 	cmd(true, "tput", "reset")
 }
+
+func equals(a, b []byte) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func findKey(key []byte) string {
+	for _, k := range KeyList {
+		if equals(k.data, key) {
+			return k.Name
+		}
+	}
+
+	return ""
+}
