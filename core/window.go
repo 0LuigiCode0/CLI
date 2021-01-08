@@ -3,27 +3,21 @@ package core
 import (
 	"context"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/000mrLuigi000/Library/logger"
 )
 
-type window struct {
+//Window обьект окна
+type Window struct {
 	lines  int
 	column int
 	frame  [][]string
 	log    *logger.Logger
-	fct    time.Duration
-
-	apptowin
 }
 
-type apptowin interface {
-	size() (int, int)
-	clear()
-}
-
-func (w *window) reSize(ctx context.Context) {
+func (w *Window) reSize(ctx context.Context) {
 	defer wg.Done()
 	for {
 		select {
@@ -33,7 +27,7 @@ func (w *window) reSize(ctx context.Context) {
 		default:
 			newLine, newColumn := w.size()
 			if newLine != w.lines && newColumn != w.column {
-				w.clear()
+				clear()
 				frame := make([][]string, newLine, newLine)
 				for i := range frame {
 					frame[i] = make([]string, newColumn, newColumn)
@@ -42,7 +36,7 @@ func (w *window) reSize(ctx context.Context) {
 				w.column = newColumn
 				w.setLayout(frame)
 			} else if newLine != w.lines {
-				w.clear()
+				clear()
 				frame := make([][]string, newLine, newLine)
 				for i := range frame {
 					frame[i] = make([]string, w.column, w.column)
@@ -50,7 +44,7 @@ func (w *window) reSize(ctx context.Context) {
 				w.lines = newLine
 				w.setLayout(frame)
 			} else if newColumn != w.column {
-				w.clear()
+				clear()
 				frame := w.frame
 				for i := range frame {
 					frame[i] = make([]string, newColumn, newColumn)
@@ -59,14 +53,14 @@ func (w *window) reSize(ctx context.Context) {
 				w.setLayout(frame)
 			}
 
-			time.Sleep(w.fct)
+			time.Sleep(fct)
 		}
 	}
 }
 
-func (w *window) reView(ctx context.Context) {
+func (w *Window) reView(ctx context.Context) {
 	defer wg.Done()
-	time.Sleep(w.fct / 2)
+	time.Sleep(fct / 2)
 	for {
 		select {
 		case <-ctx.Done():
@@ -96,19 +90,32 @@ func (w *window) reView(ctx context.Context) {
 				resp = ""
 			}
 
-			time.Sleep(w.fct)
+			time.Sleep(fct)
 		}
 	}
 }
 
-func (w *window) getPX(i, j int) string {
+func (w *Window) size() (int, int) {
+	var newLine, newColumn int
+	res, _ := cmd(false, "tput", "lines")
+	if len(res) > 0 {
+		newLine, _ = strconv.Atoi(string(res[:len(res)-1]))
+	}
+	res, _ = cmd(false, "tput", "cols")
+	if len(res) > 0 {
+		newColumn, _ = strconv.Atoi(string(res[:len(res)-1]))
+	}
+	return newLine, newColumn
+}
+
+func (w *Window) getPX(i, j int) string {
 	rw.Lock()
 	defer rw.Unlock()
 
 	return w.frame[i][j]
 }
 
-func (w *window) setPX(i, j int, v string) {
+func (w *Window) setPX(i, j int, v string) {
 	rw.Lock()
 	defer rw.Unlock()
 
@@ -116,7 +123,7 @@ func (w *window) setPX(i, j int, v string) {
 	return
 }
 
-func (w *window) setLayout(arr [][]string) {
+func (w *Window) setLayout(arr [][]string) {
 	rw.Lock()
 	defer rw.Unlock()
 
