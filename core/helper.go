@@ -27,10 +27,9 @@ func cmd(out bool, comand string, args ...string) ([]byte, error) {
 func clear() {
 	cmd(true, "clear")
 	cmd(true, "tput", "civis")
-	cmd(true, "stty", "-echo")
+	cmd(true, "stty", "-echo", "iexten", "-icanon", "min", "1")
 }
 func reset() {
 	cmd(true, "clear")
 	cmd(true, "tput", "reset")
-	cmd(true, "stty", "echo")
 }

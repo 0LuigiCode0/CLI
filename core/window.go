@@ -22,7 +22,7 @@ func (w *Window) reSize(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			w.log.Info("Resize stoped")
+			//w.log.Info("Resize stoped")
 			return
 		default:
 			newLine, newColumn := w.size()
@@ -64,7 +64,7 @@ func (w *Window) reView(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			w.log.Info("Review stoped")
+			//w.log.Info("Review stoped")
 			return
 		default:
 			for i := 0; i < w.lines; i++ {

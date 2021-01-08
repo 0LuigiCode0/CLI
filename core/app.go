@@ -15,20 +15,26 @@ import (
 //App главный обьект приложения
 type App struct {
 	w   *Window
+	e   *Event
 	log *logger.Logger
 	g   map[interface{}]interface{}
 }
 
 //InitApp инициализаци приложения
 func InitApp() *App {
+	log := logger.InitLogger("")
 	a := &App{
-		log: logger.InitLogger(""),
+		log: log,
 		g:   map[interface{}]interface{}{},
 	}
 	w := &Window{
-		log: a.log,
+		log: log,
 	}
 	a.w = w
+	e := &Event{
+		log: log,
+	}
+	a.e = e
 
 	newLine, newColumn := w.size()
 	frame := make([][]string, newLine, newLine)
@@ -45,13 +51,14 @@ func InitApp() *App {
 //Start запуск приложения
 func (a *App) Start() {
 	clear()
-	wg.Add(2)
+	wg.Add(1)
 
 	ctx, cancelf := context.WithCancel(context.Background())
 
-	go a.w.reView(ctx)
-	go a.w.reSize(ctx)
-	go game(a)
+	//	go a.w.reView(ctx)
+	//go a.w.reSize(ctx)
+	go a.e.listen(ctx)
+	//	go game(a)
 
 	close := make(chan os.Signal)
 	signal.Notify(close, os.Interrupt, os.Kill)
