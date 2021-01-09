@@ -9,15 +9,27 @@ import (
 	"github.com/000mrLuigi000/Library/logger"
 )
 
-//Window обьект окна
-type Window struct {
+//Window интерфейс окна
+type Window interface {
+	reSize(ctx context.Context)
+	reView(ctx context.Context)
+	size() (int, int)
+	getPX(i, j int) string
+	setPX(i, j int, v string)
+	setFrame(arr [][]string)
+	getLayout() LayoutI
+	SetLayout(lay LayoutI)
+}
+
+type window struct {
 	lines  int
 	column int
 	frame  [][]string
+	layout LayoutI
 	log    *logger.Logger
 }
 
-func (w *Window) reSize(ctx context.Context) {
+func (w *window) reSize(ctx context.Context) {
 	defer wg.Done()
 	for {
 		select {
@@ -34,7 +46,7 @@ func (w *Window) reSize(ctx context.Context) {
 				}
 				w.lines = newLine
 				w.column = newColumn
-				w.setLayout(frame)
+				w.setFrame(frame)
 			} else if newLine != w.lines {
 				clear()
 				frame := make([][]string, newLine, newLine)
@@ -42,7 +54,7 @@ func (w *Window) reSize(ctx context.Context) {
 					frame[i] = make([]string, w.column, w.column)
 				}
 				w.lines = newLine
-				w.setLayout(frame)
+				w.setFrame(frame)
 			} else if newColumn != w.column {
 				clear()
 				frame := w.frame
@@ -50,7 +62,7 @@ func (w *Window) reSize(ctx context.Context) {
 					frame[i] = make([]string, newColumn, newColumn)
 				}
 				w.column = newColumn
-				w.setLayout(frame)
+				w.setFrame(frame)
 			}
 
 			time.Sleep(fct)
@@ -58,7 +70,7 @@ func (w *Window) reSize(ctx context.Context) {
 	}
 }
 
-func (w *Window) reView(ctx context.Context) {
+func (w *window) reView(ctx context.Context) {
 	defer wg.Done()
 	time.Sleep(fct / 2)
 	for {
@@ -95,7 +107,7 @@ func (w *Window) reView(ctx context.Context) {
 	}
 }
 
-func (w *Window) size() (int, int) {
+func (w *window) size() (int, int) {
 	var newLine, newColumn int
 	res, _ := cmd(false, "tput", "lines")
 	if len(res) > 0 {
@@ -108,14 +120,14 @@ func (w *Window) size() (int, int) {
 	return newLine, newColumn
 }
 
-func (w *Window) getPX(i, j int) string {
+func (w *window) getPX(i, j int) string {
 	rw.Lock()
 	defer rw.Unlock()
 
 	return w.frame[i][j]
 }
 
-func (w *Window) setPX(i, j int, v string) {
+func (w *window) setPX(i, j int, v string) {
 	rw.Lock()
 	defer rw.Unlock()
 
@@ -123,10 +135,26 @@ func (w *Window) setPX(i, j int, v string) {
 	return
 }
 
-func (w *Window) setLayout(arr [][]string) {
+func (w *window) setFrame(arr [][]string) {
 	rw.Lock()
 	defer rw.Unlock()
 
 	w.frame = arr
 	return
+}
+
+//SetLayout заменяет слой
+func (w *window) SetLayout(lay LayoutI) {
+	rw.Lock()
+	defer rw.Unlock()
+
+	w.layout = lay
+	return
+}
+
+func (w *window) getLayout() LayoutI {
+	rw.Lock()
+	defer rw.Unlock()
+
+	return w.layout
 }

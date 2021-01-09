@@ -3,36 +3,41 @@ package core
 import (
 	"context"
 	"errors"
-	"fmt"
-	"math/rand"
 	"os"
 	"os/signal"
-	"time"
 
 	"github.com/000mrLuigi000/Library/logger"
 )
 
 //App главный обьект приложения
-type App struct {
-	w   *Window
+type App interface {
+	Start()
+	GetValue(key interface{}) (interface{}, error)
+	SetValue(key, value interface{})
+	Window() Window
+}
+
+type app struct {
+	w   Window
 	e   *Event
 	log *logger.Logger
 	g   map[interface{}]interface{}
 }
 
 //InitApp инициализаци приложения
-func InitApp() *App {
+func InitApp() App {
 	log := logger.InitLogger("")
-	a := &App{
+	a := &app{
 		log: log,
 		g:   map[interface{}]interface{}{},
 	}
-	w := &Window{
+	w := &window{
 		log: log,
 	}
 	a.w = w
 	e := &Event{
-		log: log,
+		log:     log,
+		windowI: w,
 	}
 	a.e = e
 
@@ -49,7 +54,7 @@ func InitApp() *App {
 }
 
 //Start запуск приложения
-func (a *App) Start() {
+func (a *app) Start() {
 	clear()
 	wg.Add(1)
 
@@ -69,8 +74,13 @@ func (a *App) Start() {
 	return
 }
 
+//GetValue получить обьект окна
+func (a *app) Window() Window {
+	return a.w
+}
+
 //GetValue получить глобальное значение
-func (a *App) GetValue(key interface{}) (interface{}, error) {
+func (a *app) GetValue(key interface{}) (interface{}, error) {
 	rw.Lock()
 	defer rw.Unlock()
 
@@ -81,7 +91,7 @@ func (a *App) GetValue(key interface{}) (interface{}, error) {
 }
 
 //SetValue запомнить глобальное значение
-func (a *App) SetValue(key, value interface{}) {
+func (a *app) SetValue(key, value interface{}) {
 	rw.Lock()
 	defer rw.Unlock()
 
@@ -89,21 +99,21 @@ func (a *App) SetValue(key, value interface{}) {
 	return
 }
 
-func game(App *App) {
-	close := make(chan os.Signal)
-	signal.Notify(close, os.Interrupt, os.Kill)
+// func game(App *app) {
+// 	close := make(chan os.Signal)
+// 	signal.Notify(close, os.Interrupt, os.Kill)
 
-	for {
-		select {
-		case <-close:
-			return
-		default:
-			i := int(rand.Float32()*100) % App.w.lines
-			j := int(rand.Float32()*1000) % App.w.column
-			x := byte(int(rand.Float32()*100)%App.w.lines + 50)
-			App.w.setPX(i, j, fmt.Sprintf("\033[5m\033[48;5;%vm\033[38;5;%vm%v\033[0m", x, x+20, string(x)))
+// 	for {
+// 		select {
+// 		case <-close:
+// 			return
+// 		default:
+// 			i := int(rand.Float32()*100) % App.w.lines
+// 			j := int(rand.Float32()*1000) % App.w.column
+// 			x := byte(int(rand.Float32()*100)%App.w.lines + 50)
+// 			App.w.setPX(i, j, fmt.Sprintf("\033[5m\033[48;5;%vm\033[38;5;%vm%v\033[0m", x, x+20, string(x)))
 
-			time.Sleep(fct)
-		}
-	}
-}
+// 			time.Sleep(fct)
+// 		}
+// 	}
+// }

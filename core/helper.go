@@ -45,13 +45,3 @@ func equals(a, b []byte) bool {
 	}
 	return true
 }
-
-func findKey(key []byte) string {
-	for _, k := range KeyList {
-		if equals(k.data, key) {
-			return k.Name
-		}
-	}
-
-	return ""
-}

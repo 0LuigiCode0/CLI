@@ -6,6 +6,8 @@ import (
 
 func main() {
 	app := core.InitApp()
+	l := core.NewLayout()
+	app.Window().SetLayout(l)
 	app.Start()
 	return
 }
