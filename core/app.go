@@ -25,14 +25,18 @@ type app struct {
 }
 
 //InitApp инициализаци приложения
-func InitApp() App {
+func InitApp(layout ILayout) (App, error) {
 	log := logger.InitLogger("")
 	a := &app{
 		log: log,
 		g:   map[interface{}]interface{}{},
 	}
+	if layout == nil {
+		return nil, errors.New("Layout is nil")
+	}
 	w := &window{
-		log: log,
+		log:    log,
+		layout: layout,
 	}
 	a.w = w
 	e := &Event{
@@ -50,7 +54,7 @@ func InitApp() App {
 	w.column = newColumn
 	w.frame = frame
 
-	return a
+	return a, nil
 }
 
 //Start запуск приложения
@@ -59,15 +63,24 @@ func (a *app) Start() {
 	wg.Add(1)
 
 	ctx, cancelf := context.WithCancel(context.Background())
-
 	//	go a.w.reView(ctx)
 	//go a.w.reSize(ctx)
 	go a.e.listen(ctx)
-	//	go game(a)
+
+	if f := a.w.getLayout().getCreate(); f != nil {
+		f()
+	}
 
 	close := make(chan os.Signal)
 	signal.Notify(close, os.Interrupt, os.Kill)
 	<-close
+
+	if l := a.w.getLayout(); l != nil {
+		if f := l.getDelete(); f != nil {
+			f()
+		}
+	}
+
 	cancelf()
 	wg.Wait()
 	reset()

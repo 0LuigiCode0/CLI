@@ -13,7 +13,7 @@ type Event struct {
 	windowI
 }
 type windowI interface {
-	getLayout() LayoutI
+	getLayout() ILayout
 }
 
 //Key обьект кнопки
@@ -156,6 +156,5 @@ func (e *Event) findKey(key []byte) {
 			return
 		}
 	}
-
 	return
 }

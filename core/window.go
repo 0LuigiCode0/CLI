@@ -11,21 +11,21 @@ import (
 
 //Window интерфейс окна
 type Window interface {
+	SetLayout(lay ILayout)
 	reSize(ctx context.Context)
 	reView(ctx context.Context)
 	size() (int, int)
 	getPX(i, j int) string
 	setPX(i, j int, v string)
 	setFrame(arr [][]string)
-	getLayout() LayoutI
-	SetLayout(lay LayoutI)
+	getLayout() ILayout
 }
 
 type window struct {
 	lines  int
 	column int
 	frame  [][]string
-	layout LayoutI
+	layout ILayout
 	log    *logger.Logger
 }
 
@@ -144,15 +144,25 @@ func (w *window) setFrame(arr [][]string) {
 }
 
 //SetLayout заменяет слой
-func (w *window) SetLayout(lay LayoutI) {
+func (w *window) SetLayout(lay ILayout) {
 	rw.Lock()
 	defer rw.Unlock()
 
+	if l := w.getLayout(); l != nil {
+		if f := l.getDelete(); f != nil {
+			f()
+		}
+	}
 	w.layout = lay
+	if lay != nil {
+		if f := lay.getCreate(); f != nil {
+			f()
+		}
+	}
 	return
 }
 
-func (w *window) getLayout() LayoutI {
+func (w *window) getLayout() ILayout {
 	rw.Lock()
 	defer rw.Unlock()
 
